@@ -1,4 +1,5 @@
 from random import shuffle
+from sys import exit
 
 
 marks = {'opened': '_',
@@ -110,3 +111,40 @@ class Board:
         else:
             self.open_cell_and_reveal(cell_coords)
             return True
+
+class Game:
+
+    GREETING = 'Welcome to Minesweeper. Please Select a difficulty -- (e)asy, (m)edium, (h)ard. Type quit to quit.'
+    def prompt(self):
+        print(">> ", end="")
+
+    def greet(self):
+        print(Game.GREETING)
+
+    def start_game(self, difficulty):
+        self.prompt()
+        print("Enter starting cell:")
+        self.prompt()
+        cell_str = input()
+        cell = tuple(int(x) for x in cell_str.split(","))
+        board = Board(difficulty, cell)
+        print(board.get_board_display())
+
+    def main_prompt(self):
+        main_commands = {'e': lambda: self.start_game(Difficulty(9,9,10)),
+                         'm': lambda: self.start_game(Difficulty(16, 16, 40)), 
+                         'h': lambda: self.start_game(Difficulty(16, 30, 99)), 
+                         'quit': exit}
+        self.prompt()
+        command = input()
+        while command not in main_commands:
+            print("Invalid command. Valid commands are: " + ', '.join(map(str, main_commands.keys())))
+            self.prompt()
+            command = input()
+        main_commands[command]()
+
+
+
+g = Game()
+g.greet()
+g.main_prompt()
