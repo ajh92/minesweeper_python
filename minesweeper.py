@@ -90,10 +90,12 @@ class Board:
         return x
 
     def get_board_display(self):
-        b = ''
-        for x in range(self.difficulty.x):
-            for y in range(self.difficulty.y):
-                b += self.board[x][y].mark
+        b = "  " + " ".join([str(x).zfill(2) for x in range(self.difficulty.x)])
+        b += "\r\n"
+        for y in range(self.difficulty.y):
+            b += str(y).zfill(2) + " "
+            for x in range(self.difficulty.x):
+                b += self.board[x][y].mark + "  "
             b += '\n'
         return b
 
@@ -105,16 +107,27 @@ class Board:
             b += '\n'
         return b
 
-    def make_move(self, cell_coords):
-        if self.board[cell_coords[0]][cell_coords[1]]:
+    def mark_cell(self, cell_coords, mark):
+        self.board[cell_coords[0]][cell_coords[1]].mark = mark
+
+    def open_cell(self, cell_coords):
+        if self.board[cell_coords[0]][cell_coords[1]].is_mine:
+            self.reveal_mines()
             return False
         else:
             self.open_cell_and_reveal(cell_coords)
             return True
+    def reveal_mines(self):
+        for x in range(self.difficulty.x):
+            for y in range(self.difficulty.y):
+                if self.board[x][y].is_mine:
+                    self.board[x][y].mark = marks["mine"]
+
 
 class Game:
 
     GREETING = 'Welcome to Minesweeper. Please Select a difficulty -- (e)asy, (m)edium, (h)ard. Type quit to quit.'
+
     def prompt(self):
         print(">> ", end="")
 
@@ -129,22 +142,33 @@ class Game:
         cell = tuple(int(x) for x in cell_str.split(","))
         board = Board(difficulty, cell)
         print(board.get_board_display())
+        self.game_loop(board)
 
     def main_prompt(self):
-        main_commands = {'e': lambda: self.start_game(Difficulty(9,9,10)),
-                         'm': lambda: self.start_game(Difficulty(16, 16, 40)), 
-                         'h': lambda: self.start_game(Difficulty(16, 30, 99)), 
+        main_commands = {'e': lambda: self.start_game(Difficulty(9, 9, 10)),
+                         'm': lambda: self.start_game(Difficulty(16, 16, 40)),
+                         'h': lambda: self.start_game(Difficulty(16, 30, 99)),
                          'quit': exit}
         self.prompt()
         command = input()
         while command not in main_commands:
-            print("Invalid command. Valid commands are: " + ', '.join(map(str, main_commands.keys())))
+            print("Invalid command. Valid commands are: " +
+                  ', '.join(map(str, main_commands.keys())))
             self.prompt()
             command = input()
         main_commands[command]()
 
-
-
+    def game_loop(self, board):
+        ok = True
+        while ok:
+            self.prompt()
+            command = input()
+            command = tuple(int(x) for x in command.split(","))
+            ok = board.open_cell(command)
+            if not ok:
+                print("YOU LOSE!")
+            print(board.get_board_display())
+            
 g = Game()
 g.greet()
 g.main_prompt()
